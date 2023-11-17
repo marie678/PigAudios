@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import librosa
 import numpy
 import random
+from pprint import pprint
 
 def modify_data(original_dataset):
     return ModifiedDataset(original_dataset, mel_spectro, fixed_sample_rate, num_samples, labels)
@@ -134,10 +135,9 @@ def predict(model, input_data, target, labels):
     with torch.no_grad():
         output = model(input_data.unsqueeze(dim=0))
         pred = output.argmax(dim=1, keepdim=True)
-        predicted_label = labels[pred]
-        expected_label = labels[target]
+        predicted_label = pred.item()
+        expected_label = target
     return predicted_label, expected_label
-
 
 
 ### --------------------------------------------------------------------------------------------------------------- ###
@@ -238,7 +238,7 @@ def class_distrib_approx(dataset, num_samples, dataset_name):
 
 
 # To convert the class weights to tensors
-def class_weights(class_weights_dict) :
+def class_weights_tensor(class_weights_dict) :
     weights_list = [class_weights_dict[i] for i in range(len(class_weights_dict))]
     class_weights_tensor = torch.tensor(weights_list, dtype=torch.float).to(device)
     
