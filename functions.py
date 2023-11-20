@@ -238,7 +238,7 @@ def class_distrib_approx(dataset, num_samples, dataset_name):
 
 
 # To convert the class weights to tensors
-def class_weights_tensor(class_weights_dict) :
+def class_weights_tensor(class_weights_dict, device) :
     weights_list = [class_weights_dict[i] for i in range(len(class_weights_dict))]
     class_weights_tensor = torch.tensor(weights_list, dtype=torch.float).to(device)
     

@@ -52,7 +52,7 @@ class CNN_mel(nn.Module):
         )
         self.flatten = nn.Flatten()
         
-        self.fc1 = nn.Linear(416, 128) #832
+        self.fc1 = nn.Linear(8736, 128) #832
         self.fc2 = nn.Linear(128,64)
         self.fc3 = nn.Linear(64,4)
         self.softmax = nn.Softmax(dim=1)
@@ -129,7 +129,7 @@ class CNN_mfcc(nn.Module):
         )
         self.flatten = nn.Flatten()
         
-        self.fc1 = nn.Linear(448, 128) #496
+        self.fc1 = nn.Linear(3776, 128) #496
         self.fc2 = nn.Linear(128,64)
         self.fc3 = nn.Linear(64,4)
         self.softmax = nn.Softmax(dim=1)
