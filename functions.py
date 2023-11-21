@@ -130,7 +130,7 @@ def test_model(model, testloader, criterion, device):
     return test_loss, accuracy
 
 
-def predict(model, input_data, target, labels):
+def predict(model, input_data, target):
     model.eval()
     with torch.no_grad():
         output = model(input_data.unsqueeze(dim=0))
