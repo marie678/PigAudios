@@ -11,8 +11,8 @@ class CNN_spectro(nn.Module):
             nn.Conv2d(1,
                 out_channels=16,
                 kernel_size=3,
-                stride=2,
-                padding=0
+                stride=1,
+                padding=1
             ),
             nn.BatchNorm2d(num_features=16),
             nn.ReLU(),
@@ -29,7 +29,7 @@ class CNN_spectro(nn.Module):
                 out_channels=32,
                 kernel_size=3,
                 stride=2,
-                padding=0
+                padding=1
             ),
             nn.BatchNorm2d(num_features=32),
             nn.ReLU(),
@@ -46,7 +46,7 @@ class CNN_spectro(nn.Module):
                 out_channels=64,
                 kernel_size=3,
                 stride=2,
-                padding=0
+                padding=1
             ),
             nn.BatchNorm2d(num_features=64),
             nn.ReLU(),
@@ -61,21 +61,21 @@ class CNN_spectro(nn.Module):
             nn.Conv2d(
                 in_channels=64,
                 out_channels=128,
-                kernel_size=2,
+                kernel_size=3,
                 stride=2,
-                padding=0
+                padding=1
             ),
             nn.BatchNorm2d(num_features=128),
             nn.ReLU(),
-#             nn.MaxPool2d(
-#                 kernel_size=4,
-#                 stride=2
-#             ),
+            nn.MaxPool2d(
+                kernel_size=2,
+                stride=2
+            ),
             nn.Dropout(p=0.5)
         )
         self.flatten = nn.Flatten()
         
-        self.fc1 = nn.Linear(384, 128)
+        self.fc1 = nn.Linear(512, 128)
         self.fc2 = nn.Linear(128,64)
         self.fc3 = nn.Linear(64,4)
         self.softmax = nn.Softmax(dim=1)
@@ -101,7 +101,6 @@ class CNN_spectro(nn.Module):
 
         return x
 
-# Build the model
 
 
 class CNN_mel(nn.Module):
@@ -113,8 +112,8 @@ class CNN_mel(nn.Module):
             nn.Conv2d(1,
                 out_channels=16,
                 kernel_size=3,
-                stride=2,
-                padding=0
+                stride=1,
+                padding=1
             ),
             nn.BatchNorm2d(num_features=16),
             nn.ReLU(),
@@ -131,7 +130,7 @@ class CNN_mel(nn.Module):
                 out_channels=32,
                 kernel_size=3,
                 stride=2,
-                padding=0
+                padding=1
             ),
             nn.BatchNorm2d(num_features=32),
             nn.ReLU(),
@@ -148,7 +147,7 @@ class CNN_mel(nn.Module):
                 out_channels=64,
                 kernel_size=3,
                 stride=1,
-                padding=0
+                padding=1
             ),
             nn.BatchNorm2d(num_features=64),
             nn.ReLU(),
@@ -165,19 +164,19 @@ class CNN_mel(nn.Module):
                 out_channels=128,
                 kernel_size=2,
                 stride=1,
-                padding=0
+                padding=1
             ),
             nn.BatchNorm2d(num_features=128),
             nn.ReLU(),
-#             nn.MaxPool2d(
-#                 kernel_size=4,
-#                 stride=2
-#             ),
+            nn.MaxPool2d(
+                kernel_size=4,
+                stride=2
+            ),
             nn.Dropout(p=0.5)
         )
         self.flatten = nn.Flatten()
         
-        self.fc1 = nn.Linear(128, 128)
+        self.fc1 = nn.Linear(1920, 128)
         self.fc2 = nn.Linear(128,64)
         self.fc3 = nn.Linear(64,4)
         self.softmax = nn.Softmax(dim=1)
@@ -191,11 +190,12 @@ class CNN_mel(nn.Module):
 #         print(x.shape)
         x = self.conv3(x)
 #         print(x.shape)
-        # x = self.conv4(x)
+        x = self.conv4(x)
 #         print(x.shape)
         x = self.flatten(x)
 #         print(x.shape)
         x = nn.ReLU()(self.fc1(x))
+#         x = self.fc3(x)
         x = nn.ReLU()(self.fc2(x))
         x = self.fc3(x)
         
@@ -214,8 +214,8 @@ class CNN_mfcc(nn.Module):
             nn.Conv2d(1,
                 out_channels=16,
                 kernel_size=3,
-                stride=2,
-                padding=0
+                stride=1,
+                padding=1
             ),
             nn.BatchNorm2d(num_features=16),
             nn.ReLU(),
@@ -231,8 +231,8 @@ class CNN_mfcc(nn.Module):
                 in_channels=16,
                 out_channels=32,
                 kernel_size=3,
-                stride=2,
-                padding=0
+                stride=1,
+                padding=1
             ),
             nn.BatchNorm2d(num_features=32),
             nn.ReLU(),
@@ -247,9 +247,9 @@ class CNN_mfcc(nn.Module):
             nn.Conv2d(
                 in_channels=32,
                 out_channels=64,
-                kernel_size=2,
-                stride=2,
-                padding=0
+                kernel_size=3,
+                stride=1,
+                padding=1
             ),
             nn.BatchNorm2d(num_features=64),
             nn.ReLU(),
@@ -264,22 +264,22 @@ class CNN_mfcc(nn.Module):
             nn.Conv2d(
                 in_channels=64,
                 out_channels=128,
-                kernel_size=2,
+                kernel_size=3,
                 stride=2,
-                padding=0
+                padding=1
             ),
             nn.BatchNorm2d(num_features=128),
             nn.ReLU(),
-#             nn.MaxPool2d(
-#                 kernel_size=4,
-#                 stride=2
-#             ),
+            nn.MaxPool2d(
+                kernel_size=4,
+                stride=2
+            ),
             nn.Dropout(p=0.5)
         )
         self.flatten = nn.Flatten()
         
-        self.fc1 = nn.Linear(384, 128)
-        self.fc2 = nn.Linear(128,64)
+        self.fc1 = nn.Linear(1792, 64)
+#         self.fc2 = nn.Linear(128,64)
         self.fc3 = nn.Linear(64,4)
         self.softmax = nn.Softmax(dim=1)
 
@@ -297,7 +297,7 @@ class CNN_mfcc(nn.Module):
         x = self.flatten(x)
 #         print(x.shape)
         x = nn.ReLU()(self.fc1(x))
-        x = nn.ReLU()(self.fc2(x))
+#         x = nn.ReLU()(self.fc2(x))
         x = self.fc3(x)
         
 #         predictions = self.softmax(x)
