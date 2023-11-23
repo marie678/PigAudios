@@ -243,3 +243,16 @@ def class_weights_tensor(class_weights_dict, device) :
     class_weights_tensor = torch.tensor(weights_list, dtype=torch.float).to(device)
     
     return class_weights_tensor
+
+
+
+
+def reset_weights(m):
+    '''
+    Try resetting model weights to avoid
+    weight leakage.
+    '''
+    for layer in m.children():
+        if hasattr(layer, 'reset_parameters'):
+#             print(f'Reset trainable parameters of layer = {layer}')
+            layer.reset_parameters()
