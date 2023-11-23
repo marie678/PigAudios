@@ -50,10 +50,10 @@ def train_epoch(model, trainloader, optim, criterion, device, epoch, train_losse
     return average_loss, accuracy
  
 
-def train_epochs(model, trainloader, valloader, optim, train_criterion, val_criterion, device, n_epochs, saving_path, patience=5, min_improvement=0.001):
+def train_epochs(model, trainloader, valloader, optim, train_criterion, val_criterion, device, n_epochs, saving_path, fold, patience=5, min_improvement=0.001):
     
-    best_val_loss = float('inf')
-    best_model_state = None
+    best_val_loss_overall = float('inf')
+#     best_model_state = None
     counter = 0
     train_losses = []
     train_accuracies = []
@@ -62,12 +62,17 @@ def train_epochs(model, trainloader, valloader, optim, train_criterion, val_crit
 
     
     for epoch in range(n_epochs):
+        
+        print(f'Starting epoch {epoch}')
+
         train_loss, train_accuracy = train_epoch(model, trainloader, optim, train_criterion, device, epoch, train_losses, train_accuracies)
         
         model.eval()
         with torch.no_grad():
             val_loss = 0
             val_correct = 0
+            val_total = 0
+
         
             for i, (wf, sr, labels, transform) in enumerate(valloader):
                 transform, labels = transform.to(device), labels.to(device)
@@ -76,6 +81,7 @@ def train_epochs(model, trainloader, valloader, optim, train_criterion, val_crit
                 val_loss += val_criterion(preds, labels).item()
 
                 _, predicted = preds.max(1)
+                val_total += labels.size(0)
                 val_correct += predicted.eq(labels).sum().item()
 
             average_val_loss = val_loss / len(valloader)
@@ -87,11 +93,10 @@ def train_epochs(model, trainloader, valloader, optim, train_criterion, val_crit
             model.train()
             
             # Check if validation loss has improved
-            if best_val_loss - val_loss > min_improvement:
-                best_val_loss = val_loss
+            if best_val_loss_overall - val_loss > min_improvement:
+                best_val_loss_overall = val_loss
                 counter = 0
-                
-                best_model_state = model.state_dict()
+                best_model_state_overall = model.state_dict()
 
             else:
                 counter += 1
@@ -100,10 +105,27 @@ def train_epochs(model, trainloader, valloader, optim, train_criterion, val_crit
                 print("Early stopping! No improvement for", patience, "epochs.")
                 break
                  
-        torch.save(best_model_state, saving_path)
+#         torch.save(best_model_state, saving_path)
 
         print(f"epoch n.{epoch} : Val Average Loss = {average_val_loss}, Val Accuracy = {val_accuracy:.2f}%")
-        
+    
+    
+    # Accuracy over the validation split (with the final model after all epochs)
+    correct, total = 0, 0
+    with torch.no_grad():
+        for i, (wf, sr, labels, transform) in enumerate(valloader): 
+            transform, labels = transform.to(device), labels.to(device)
+            preds = model(transform)
+            _, predicted = preds.max(1)
+            total += labels.size(0)
+            correct += predicted.eq(labels).sum().item()
+                
+        # Print accuracy over all fold
+        print('Accuracy for fold %d: %d %%' % (fold, 100.0 * correct / total))
+        print('--------------------------------')
+        results[fold] = 100.0 * (correct / total)
+         
+
     print("Training finished.")
     # Return the learning curves
     return train_losses, train_accuracies, val_losses, val_accuracies
