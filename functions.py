@@ -5,6 +5,8 @@ import librosa
 import numpy
 import random
 from pprint import pprint
+from collections import defaultdict
+
 
 def modify_data(original_dataset):
     return ModifiedDataset(original_dataset, mel_spectro, fixed_sample_rate, num_samples, labels)
@@ -111,6 +113,8 @@ def train_epochs(model, trainloader, valloader, optim, train_criterion, val_crit
 def test_model(model, testloader, criterion, device):
     test_loss = 0
     correct = 0
+    class_correct = defaultdict(int)
+    class_total = defaultdict(int)
 
     with torch.no_grad():
         for wvf, sr, target, transform in tqdm(testloader):
@@ -119,6 +123,11 @@ def test_model(model, testloader, criterion, device):
             test_loss += criterion(output, target).item()
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
+            
+            # Compute accuracies by class
+            for label, prediction in zip(target.numpy(), pred.numpy().flatten()):
+                class_correct[label] += int(label == prediction)
+                class_total[label] += 1
 
     test_loss /= len(testloader.dataset)
     accuracy = 100. * correct / len(testloader.dataset)
@@ -126,6 +135,11 @@ def test_model(model, testloader, criterion, device):
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.1f}%)\n'.format(
     test_loss, correct, len(testloader.dataset),
     100. * correct / len(testloader.dataset)))
+    
+    print("Accuracy by class:")
+    for i in range(len(class_correct)):
+        accuracy = 100. * class_correct[i] / class_total[i]
+        print(f"Class {i}: {accuracy:.2f}%")
 
     return test_loss, accuracy
 
