@@ -52,8 +52,7 @@ def train_epoch(model, trainloader, optim, criterion, device, epoch, train_losse
 
 def train_epochs(model, trainloader, valloader, optim, train_criterion, val_criterion, device, n_epochs, saving_path, fold, patience=5, min_improvement=0.001):
     
-    best_val_loss_overall = float('inf')
-#     best_model_state = None
+    best_val_loss = float('inf')
     counter = 0
     train_losses = []
     train_accuracies = []
@@ -93,11 +92,19 @@ def train_epochs(model, trainloader, valloader, optim, train_criterion, val_crit
             model.train()
             
             # Check if validation loss has improved
-            if best_val_loss_overall - val_loss > min_improvement:
-                best_val_loss_overall = val_loss
+            if best_val_loss - val_loss > min_improvement:
+                best_val_loss = val_loss  
                 counter = 0
-                best_model_state_overall = model.state_dict()
-
+                
+                if best_val_loss_overall == float('inf') :
+                    best_val_loss_overall = best_val_loss
+                    best_model_state_overall = model.state_dict()
+                else :
+                    if best_val_loss < best_val_loss_overall :
+                        best_val_loss_overall = best_val_loss
+                        best_model_state_overall = model.state_dict()
+                        check = fold
+                        
             else:
                 counter += 1
 
