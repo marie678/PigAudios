@@ -50,7 +50,7 @@ def train_epoch(model, trainloader, optim, criterion, device, epoch, train_losse
     return average_loss, accuracy
  
 
-def train_epochs(model, trainloader, valloader, optim, train_criterion, val_criterion, device, n_epochs, saving_path, fold, patience=5, min_improvement=0.001):
+def train_epochs(model, trainloader, valloader, optim, train_criterion, val_criterion, device, n_epochs, saving_path, fold, best_val_loss_overall, results, patience=5, min_improvement=0.001):
     
     best_val_loss = float('inf')
     counter = 0
