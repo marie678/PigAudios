@@ -50,9 +50,10 @@ def train_epoch(model, trainloader, optim, criterion, device, epoch, train_losse
     return average_loss, accuracy
  
 
-def train_epochs(model, trainloader, valloader, optim, train_criterion, val_criterion, device, n_epochs, saving_path, fold, best_val_loss_overall, results, patience=5, min_improvement=0.001):
+def train_epochs(model, trainloader, valloader, optim, train_criterion, val_criterion, device, n_epochs, saving_path, fold, best_val_loss_overall, best_model_state_overall, results, patience=5, min_improvement=0.001):
     
     best_val_loss = float('inf')
+    best_model_state = None
     counter = 0
     train_losses = []
     train_accuracies = []
@@ -96,14 +97,16 @@ def train_epochs(model, trainloader, valloader, optim, train_criterion, val_crit
                 best_val_loss = val_loss  
                 counter = 0
                 
-                if best_val_loss_overall == float('inf') :
-                    best_val_loss_overall = best_val_loss
-                    best_model_state_overall = model.state_dict()
-                else :
-                    if best_val_loss < best_val_loss_overall :
-                        best_val_loss_overall = best_val_loss
-                        best_model_state_overall = model.state_dict()
-                        check = fold
+                best_model_state = model.state_dict()             
+                
+#                 if best_val_loss_overall == float('inf') :
+#                     best_val_loss_overall = best_val_loss
+#                     best_model_state_overall = model.state_dict()
+#                 else :
+#                     if best_val_loss < best_val_loss_overall :
+#                         best_val_loss_overall = best_val_loss
+#                         best_model_state_overall = model.state_dict()
+#                         check = fold
                         
             else:
                 counter += 1
@@ -135,7 +138,7 @@ def train_epochs(model, trainloader, valloader, optim, train_criterion, val_crit
 
     print("Training finished.")
     # Return the learning curves
-    return train_losses, train_accuracies, val_losses, val_accuracies
+    return best_val_loss, best_model_state, train_losses, train_accuracies, val_losses, val_accuracies
 
     
 
@@ -154,7 +157,7 @@ def test_model(model, testloader, criterion, device):
             correct += pred.eq(target.view_as(pred)).sum().item()
             
             # Compute accuracies by class
-            for label, prediction in zip(target.numpy(), pred.numpy().flatten()):
+            for label, prediction in zip(target.cpu().numpy(), pred.cpu().numpy().flatten()):
                 class_correct[label] += int(label == prediction)
                 class_total[label] += 1
 
