@@ -6,6 +6,10 @@ import numpy
 import random
 from pprint import pprint
 from collections import defaultdict
+import librosa.display
+from sklearn.metrics import confusion_matrix
+import pandas as pd
+
 
 
 def modify_data(original_dataset):
@@ -176,6 +180,91 @@ def test_model(model, testloader, criterion, device):
     return test_loss, accuracy
 
 
+def test_model2(model, testloader, criterion, device):
+    test_loss = 0
+    correct = 0
+    class_correct = defaultdict(int)
+    class_total = defaultdict(int)
+    predictions = []
+    targets = []
+    
+    with torch.no_grad():
+        for wvf, _, target, transfo in tqdm(testloader):
+            wvf, target, transfo = wvf.to(device), target.to(device), transfo.to(device)
+            output = model(transfo)
+            test_loss += criterion(output, target).item()
+            pred = output.argmax(dim=1, keepdim=True)
+            correct += pred.eq(target.view_as(pred)).sum().item()
+            
+            # Compute accuracies by class
+            for label, prediction in zip(target.cpu().numpy(), pred.cpu().numpy().flatten()):
+                class_correct[label] += int(label == prediction)
+                class_total[label] += 1
+
+            # Save predictions and true labels
+            predictions.extend(pred.cpu().numpy().flatten())
+            targets.extend(target.cpu().numpy())
+            
+    test_loss /= len(testloader.dataset)
+    test_accuracy = 100 * correct / len(testloader.dataset)
+
+    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.1f}%)\n'.format(
+        test_loss, correct, len(testloader.dataset), test_accuracy))
+    
+    print("Accuracy by class:")
+    for i in range(len(class_correct)):
+        accuracy = 100 * class_correct[i] / class_total[i]
+        print(f"Class {i}: {accuracy:.2f}%")
+    print('\n')   
+    
+    cm = confusion_matrix(targets, predictions)
+    df_cm2 = pd.DataFrame(cm, index=range(len(class_correct)), columns=range(len(class_correct)))
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(df_cm2, annot=True, fmt='d')
+    
+    FP = cm.sum(axis=0) - np.diag(cm)
+    FN = cm.sum(axis=1) - np.diag(cm)
+    TP = np.diag(cm)
+    TN = cm.sum() - (FP + FN + TP)
+
+    print('\n')  
+    # Sensitivity, hit rate, recall, or true positive rate
+    TPR = TP / (TP + FN)
+    TPR = [round(elem, 2) for elem in TPR]
+    print('Recall :', TPR)
+    # Specificity or true negative rate
+    TNR = TN / (TN + FP)
+    TNR = [round(elem, 2) for elem in TNR]
+    print('Specificity :', TNR)
+    # Precision or positive predictive value
+    PPV = TP / (TP + FP)
+    PPV = [round(elem, 2) for elem in PPV]
+    print('Precision :', PPV)
+    # Negative predictive value
+    NPV = TN / (TN + FN)
+    NPV = [round(elem, 2) for elem in NPV]
+    print('Negative Precision :', NPV)
+    # Fall out or false positive rate
+    FPR = FP / (FP + TN)
+    FPR = [round(elem, 2) for elem in FPR]
+    print('False positive rate :', FPR)
+    # False negative rate
+    FNR = FN / (TP + FN)
+    FNR = [round(elem, 2) for elem in FNR]
+    print('False negative rate :', FNR)
+    # False discovery rate
+    FDR = FP / (TP + FP)
+    FDR = [round(elem, 2) for elem in FDR]
+    print('False discovery rate :', FDR)
+
+    # Overall accuracy
+    ACC = (TP + TN) / (TP + FP + FN + TN)
+    ACC = [round(elem, 2) for elem in ACC]
+    print('Overall Accuracy :', ACC)
+    print('\n')   
+
+    return test_loss, accuracy
+
 def predict(model, input_data, target):
     model.eval()
     with torch.no_grad():
@@ -204,6 +293,14 @@ def plot_spectrogram(specgram, title=None, ylabel="freq_bin", ax=None):
         ax.set_title(title)
     ax.set_ylabel(ylabel)
     ax.imshow(librosa.power_to_db(specgram), origin="lower", aspect="auto", interpolation="nearest")
+
+def plot_spectrogram2(specgram, sample_rate, title=None, ax=None):
+    if ax is None:
+        _, ax = plt.subplots(1, 1)
+    if title is not None:
+        ax.set_title(title)
+    librosa.display.specshow(librosa.power_to_db(specgram), sr=sample_rate, x_axis='time', y_axis='linear', ax=ax, cmap='viridis')
+    ax.set_ylabel('Frequency (Hz)')
 
 def plot_waveform(waveform, sr, title="Waveform", ax=None):
     waveform = waveform.numpy()
